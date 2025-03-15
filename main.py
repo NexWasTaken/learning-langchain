@@ -1,9 +1,14 @@
+import os
+
 from dotenv import load_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_community.document_loaders import TextLoader
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda, RunnableParallel, RunnableBranch
+from langchain.text_splitter import CharacterTextSplitter
+from langchain_community.vectorstores import Chroma
 
 
 def chat_model_basic():
@@ -221,7 +226,7 @@ def chains_branching():
         ]
     )
 
-    classification_chain = classification_template | model |  StrOutputParser()
+    classification_chain = classification_template | model | StrOutputParser()
 
     chain = classification_chain | branches
 
@@ -235,6 +240,32 @@ def chains_branching():
     print(r)
 
 
+def rag_basics_1a():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    book_file_path = os.path.join(current_dir, "books", "odyssey.txt")
+    db_dir = os.path.join(current_dir, "db", "chrome_db")
+
+    if not os.path.exists(book_file_path):
+        raise FileNotFoundError(
+            f"The file {book_file_path} does not exist. Please check the path."
+        )
+
+    if not os.path.exists(db_dir):
+        print("Database directory does not exist. Initializing vector store...")
+
+        text_loader = TextLoader(book_file_path, encoding="utf-8")
+        documents = text_loader.load()
+
+        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        split_docs = text_splitter.split_documents(documents)
+
+        embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
+
+        Chroma.from_documents(
+            documents=split_docs, embedding=embeddings, persist_directory=db_dir
+        )
+
+
 def main():
     print("Running main function.")
     # chat_model_basic()
@@ -246,13 +277,7 @@ def main():
     # chains_extended()
     # chains_parallel()
     # chains_branching()
-
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    vector = embeddings.embed_query("I love cats more than dogs.")
-    print(f"Vector α has {len(vector)} dimensions.")
-
-    vector = embeddings.embed_query("Harry porter sucks!")
-    print(f"Vector β has {len(vector)} dimensions.")
+    rag_basics_1a()
 
 
 if __name__ == "__main__":

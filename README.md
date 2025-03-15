@@ -2,6 +2,8 @@
 
 Examples with langchain following the tutorial @ [LangChain Master Class For Beginners 2024 [+20 Examples, LangChain V0.2]](https://www.youtube.com/watch?v=yF9kGESAi3M)
 
+I skipped the ones that I felt were redundant.
+
 ## Topic Covered
 
 ### 1. Chat Models
@@ -28,3 +30,5 @@ Examples with langchain following the tutorial @ [LangChain Master Class For Beg
 - Add metadata for better answers.
 
 ### 5. Agents & Tools
+
+Three states: Action, Observation, Thought
